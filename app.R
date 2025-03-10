@@ -1,4 +1,4 @@
-install.packages("shiny", "rio")
+
 library(shiny)
 library(rio)
 
@@ -14,7 +14,8 @@ ui <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
 
-      textOutput("filename")
+      checkboxGroupInput("cols", "Select columns to display", 
+                         choices = NULL, selected = NULL)
             
       # # Input: Slider for the number of bins ----
       # sliderInput(inputId = "bins",
@@ -38,7 +39,7 @@ ui <- fluidPage(
 )
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output) {
+server <- function(input, output, session) {
 
   # Define the local file path (update this with the path to your file)
   local_file_path <- "data/listings.csv"  # Change this to your local file path
@@ -46,15 +47,20 @@ server <- function(input, output) {
   # Import the dataset using RIO
   dataset <- rio::import(local_file_path)
   
-  # Display the file name (for reference)
-  output$filename <- renderText({
-    paste("Data imported from:", local_file_path)
+  observe({
+    updateCheckboxGroupInput(session, "cols", choices = colnames(dataset))
   })
   
-  # Render the dataset as a table
+  # Reactive expression to filter dataset based on selected columns
+  filteredData <- reactive({
+    req(input$cols)  # Ensure that columns are selected
+    dataset[, input$cols, drop = FALSE]  # Select only the chosen columns
+  })
+  
+  # Render the selected columns as a table
   output$view <- renderTable({
-    dataset
-    
+    filteredData()  # Render the filtered data
+  
   # # Histogram of the Old Faithful Geyser Data ----
   # # with requested number of bins
   # # This expression that generates a histogram is wrapped in a call
