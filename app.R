@@ -1,6 +1,8 @@
 
 library(shiny)
 library(rio)
+library(dplyr)
+library(plotly)
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
@@ -13,9 +15,11 @@ ui <- fluidPage(
     
     # Sidebar panel for inputs ----
     sidebarPanel(
+      
+      selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood")
 
-      checkboxGroupInput("cols", "Select columns to display", 
-                         choices = NULL, selected = NULL)
+      # checkboxGroupInput("cols", "Select columns to display", 
+      #                    choices = NULL, selected = NULL)
             
       # # Input: Slider for the number of bins ----
       # sliderInput(inputId = "bins",
@@ -30,6 +34,8 @@ ui <- fluidPage(
     mainPanel(
       
       tableOutput("view")
+      
+      # plotlyOutput("pie_chart")
       
       # # Output: Histogram ----
       # plotOutput(outputId = "distPlot")
@@ -46,21 +52,47 @@ server <- function(input, output, session) {
   
   # Import the dataset using RIO
   dataset <- rio::import(local_file_path)
+
+  dataset <- dataset[!is.na(dataset$name) & !is.na(dataset$neighbourhood) & !is.na(dataset$room_type) & !is.na(dataset$minimum_nights) & !is.na(dataset$price), ]
   
-  observe({
-    updateCheckboxGroupInput(session, "cols", choices = colnames(dataset))
+  # # Reactive dataset with selective NA removal
+  # cleaned_data <- reactive({
+  #   data <- dataset
+  #   if (input$remove_na) {
+  #     data <- drop_na(data, c(name, neighbourhood, room_type, minimum_nights, price))  # Remove NA only from these columns
+  #   }
+  #   data
+  # })
+    
+  # Reactive summary table based on selected group
+  summary_data <- reactive({
+    req(input$group_by)  # Ensure input is available
+    dataset %>%
+      group_by(.data[[input$group_by]]) %>%
+      summarise(Count = n(),
+               Avg_Price_EUR = mean(price), .groups = "drop") %>%
+      arrange(desc(Avg_Price_EUR))
   })
   
-  # Reactive expression to filter dataset based on selected columns
-  filteredData <- reactive({
-    req(input$cols)  # Ensure that columns are selected
-    dataset[, input$cols, drop = FALSE]  # Select only the chosen columns
-  })
-  
-  # Render the selected columns as a table
   output$view <- renderTable({
-    filteredData()  # Render the filtered data
+    summary_data()
+
+    
+    # output$pie_chart <- renderPlotly({
+    #   plot_ly(summary_data(), labels = ~neighbourhood, values = ~Avg_Price_EUR, type = "pie") %>%
+    #     layout(title = "Dimension Distribution")
   
+  # observe({
+  #   updateCheckboxGroupInput(session, "cols", choices = colnames(dataset))
+  # })
+  
+  # # Reactive expression to filter dataset based on selected columns
+  # filteredData <- reactive({
+  #   req(input$cols)  # Ensure that columns are selected
+  #   dataset[, c("name", "neighbourhood", "room_type", "minimum_nights", "price"), drop = FALSE]  # Select only the chosen columns
+  # })
+  
+
   # # Histogram of the Old Faithful Geyser Data ----
   # # with requested number of bins
   # # This expression that generates a histogram is wrapped in a call
@@ -83,4 +115,5 @@ server <- function(input, output, session) {
 }
 
 # Create Shiny app ----
-shinyApp(ui, server, options = list(display.mode = "showcase"))
+shinyApp(ui, server)
+#shinyApp(ui, server, options = list(display.mode = "showcase"))
