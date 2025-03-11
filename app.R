@@ -17,7 +17,7 @@ dataset <- dataset[!is.na(dataset$name) & !is.na(dataset$neighbourhood) & !is.na
 ui <- fluidPage(
   
   # App title ----
-  titlePanel("Airbnb Average Prices in The Hague (NL)"),
+  titlePanel("Airbnb Average Price in The Hague (NL)"),
   
    # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -32,9 +32,9 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       
-      tableOutput("view"),
+      plotOutput("barChart"), br(), br(), br(),
       
-      plotOutput("barChart")
+      tableOutput("view")
       
     )
   )
@@ -49,7 +49,7 @@ server <- function(input, output, session) {
     req(input$group_by)  # Ensure input is available
     dataset %>%
       group_by(.data[[input$group_by]]) %>%
-      summarise(Count = n(),
+      summarise(Amount_Listings = n(),
                Avg_Price_EUR = mean(price), .groups = "drop") %>%
       arrange(desc(Avg_Price_EUR))
   })
@@ -62,8 +62,9 @@ server <- function(input, output, session) {
     ggplot(summary_data(), aes(x = .data[[input$group_by]], y = Avg_Price_EUR)) +
       geom_bar(stat = "identity", fill = "skyblue") +  # Create bar chart
       theme_minimal() +
-      labs(x = "Comparison criteria selected", y = "Average Price (€)", title = "Airbnb Average Price in the Hague (NL)") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      labs(x = as.character(input$group_by), y = "Average Price (€)", title = "Airbnb Average Price in The Hague (NL)") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1),
+            axis.title.x = element_text(face = "bold", size = 14))
   })
   
 }
