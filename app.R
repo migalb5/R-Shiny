@@ -2,7 +2,6 @@
 library(shiny)
 library(rio)
 library(dplyr)
-library(plotly)
 library(ggplot2)
 
 # Define the local file path (update this with the path to your file)
@@ -28,16 +27,6 @@ ui <- fluidPage(
       
       selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood")
 
-      # checkboxGroupInput("cols", "Select columns to display", 
-      #                    choices = NULL, selected = NULL)
-            
-      # # Input: Slider for the number of bins ----
-      # sliderInput(inputId = "bins",
-      #             label = "Number of bins:",
-      #             min = 1,
-      #             max = 50,
-      #             value = 30)
-      
     ),
     
     # Main panel for displaying outputs ----
@@ -47,11 +36,6 @@ ui <- fluidPage(
       
       plotOutput("barChart")
       
-      # plotlyOutput("pie_chart")
-      
-      # # Output: Histogram ----
-      # plotOutput(outputId = "distPlot")
-      
     )
   )
 )
@@ -60,19 +44,8 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
 
-  # # Reactive dataset with selective NA removal
-  # cleaned_data <- reactive({
-  #   data <- dataset
-  #   if (input$remove_na) {
-  #     data <- drop_na(data, c(name, neighbourhood, room_type, minimum_nights, price))  # Remove NA only from these columns
-  #   }
-  #   data
-  # })
-    
   # Reactive summary table based on selected group
   summary_data <- reactive({
-    
-
     req(input$group_by)  # Ensure input is available
     dataset %>%
       group_by(.data[[input$group_by]]) %>%
@@ -91,43 +64,11 @@ server <- function(input, output, session) {
       theme_minimal() +
       labs(x = "Comparison criteria selected", y = "Average Price (€)", title = "Airbnb Average Price in the Hague (NL)") +
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  
-    # output$pie_chart <- renderPlotly({
-    #   plot_ly(summary_data(), labels = ~neighbourhood, values = ~Avg_Price_EUR, type = "pie") %>%
-    #     layout(title = "Dimension Distribution")
-  
-  # observe({
-  #   updateCheckboxGroupInput(session, "cols", choices = colnames(dataset))
-  # })
-  
-  # # Reactive expression to filter dataset based on selected columns
-  # filteredData <- reactive({
-  #   req(input$cols)  # Ensure that columns are selected
-  #   dataset[, c("name", "neighbourhood", "room_type", "minimum_nights", "price"), drop = FALSE]  # Select only the chosen columns
-  # })
-  
-
-  # # Histogram of the Old Faithful Geyser Data ----
-  # # with requested number of bins
-  # # This expression that generates a histogram is wrapped in a call
-  # # to renderPlot to indicate that:
-  # #
-  # # 1. It is "reactive" and therefore should be automatically
-  # #    re-executed when inputs (input$bins) change
-  # # 2. Its output type is a plot
-  # output$distPlot <- renderPlot({
-  #   
-  #   x    <- faithful$waiting
-  #   bins <- seq(min(x), max(x), length.out = input$bins + 1)
-  #   
-  #   hist(x, breaks = bins, col = "#75AADB", border = "white",
-  #        xlab = "Waiting time to next eruption (in mins)",
-  #        main = "Histogram of waiting times")
-    
   })
   
 }
 
 # Create Shiny app ----
-shinyApp(ui, server)
 #shinyApp(ui, server, options = list(display.mode = "showcase"))
+shinyApp(ui, server)
+
