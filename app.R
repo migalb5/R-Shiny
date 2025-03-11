@@ -3,7 +3,8 @@ library(shiny)
 library(rio)
 library(dplyr)
 library(ggplot2)
-library(shinydashboard)
+library(bs4Dash)
+library(waiter)
 
 # Define the local file path (update this with the path to your file)
 local_file_path <- "data/listings.csv"  # Change this to your local file path
@@ -13,31 +14,48 @@ dataset <- rio::import(local_file_path)
 
 dataset <- dataset[!is.na(dataset$name) & !is.na(dataset$neighbourhood) & !is.na(dataset$room_type) & !is.na(dataset$minimum_nights) & !is.na(dataset$price), ]
 
-ui <- dashboardPage(
-  dashboardHeader(titleWidth = 500, title = "Airbnb Average Price in The Hague (NL)"),
-  dashboardSidebar(
-    selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
-    sidebarMenu(
-      menuItem("_Chart", tabName = "chart", icon = icon("dashboard")),
-      menuItem("_Table", tabName = "table", icon = icon("th"))
-    )
+preloader <- list(html = tagList(spin_1(), "Loading ..."), color = "#343a40")
+
+ui = dashboardPage(
+  title = "Airbnb Average Price in The Hague (NL)",
+  preloader = preloader,
+  header = dashboardHeader(
+    title = "Dashboard"
   ),
-  dashboardBody(
-    tabItems(
-      tabItem(tabName = "chart",
-        # Boxes need to be put in a row (or column)
-        fluidRow(
-          box(plotOutput("barChart"), width = 1000)
-          )
-      ),
-      tabItem(tabName = "table",
-        fluidRow(
-          box(tableOutput("view"))
-        )
-      )
-    )
-  )
+  sidebar = dashboardSidebar(
+    selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
+  ),
+  controlbar = dashboardControlbar(),
+  footer = dashboardFooter(),
+  body = dashboardBody()
 )
+
+
+# ui <- dashboardPage(
+#   dashboardHeader(titleWidth = 500, title = "Airbnb Average Price in The Hague (NL)"),
+#   dashboardSidebar(
+#     selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
+#     sidebarMenu(
+#       menuItem("_Chart", tabName = "chart", icon = icon("dashboard")),
+#       menuItem("_Table", tabName = "table", icon = icon("th"))
+#     )
+#   ),
+#   dashboardBody(
+#     tabItems(
+#       tabItem(tabName = "chart",
+#         # Boxes need to be put in a row (or column)
+#         fluidRow(
+#           box(plotOutput("barChart"), width = 1000)
+#           )
+#       ),
+#       tabItem(tabName = "table",
+#         fluidRow(
+#           box(tableOutput("view"))
+#         )
+#       )
+#     )
+#   )
+# )
 
 
 # # Define UI for app that draws a histogram ----
