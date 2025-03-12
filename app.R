@@ -31,16 +31,16 @@ preloader <- list(html = tagList(spin_1(), "Loading ..."), color = "#343a40")
 # )
 
 
-ui <- dashboardPage(preloader = preloader,
+ui <- bs4DashPage(preloader = preloader,
   dashboardHeader(title = "Airbnb Average Price in The Hague (NL)"),
-  dashboardSidebar(
+  bs4DashSidebar(
     selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
     sidebarMenu(
       menuItem("Chart", tabName = "chart", icon = icon("dashboard")),
       menuItem("Table", tabName = "table", icon = icon("th"))
     )
   ),
-  dashboardBody(
+  bs4DashBody(
     tabItems(
       tabItem(tabName = "chart",
         # Boxes need to be put in a row (or column)
