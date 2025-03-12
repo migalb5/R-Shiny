@@ -86,7 +86,7 @@ ui <- dashboardPage(preloader = preloader,
 # )
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output, session) {
+server <- function(input, output) {
 
 
   # Reactive summary table based on selected group
