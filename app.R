@@ -16,46 +16,46 @@ dataset <- dataset[!is.na(dataset$name) & !is.na(dataset$neighbourhood) & !is.na
 
 preloader <- list(html = tagList(spin_1(), "Loading ..."), color = "#343a40")
 
-ui = dashboardPage(
-  title = "Airbnb Average Price in The Hague (NL)",
-  preloader = preloader,
-  header = dashboardHeader(
-    title = "Dashboard"
-  ),
-  sidebar = dashboardSidebar(
-    selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
-  ),
-  controlbar = dashboardControlbar(),
-  footer = dashboardFooter(),
-  body = dashboardBody()
-)
-
-
-# ui <- dashboardPage(
-#   dashboardHeader(titleWidth = 500, title = "Airbnb Average Price in The Hague (NL)"),
-#   dashboardSidebar(
-#     selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
-#     sidebarMenu(
-#       menuItem("_Chart", tabName = "chart", icon = icon("dashboard")),
-#       menuItem("_Table", tabName = "table", icon = icon("th"))
-#     )
+# ui = dashboardPage(
+#   title = "Airbnb Average Price in The Hague (NL)",
+#   preloader = preloader,
+#   header = dashboardHeader(
+#     title = "Dashboard"
 #   ),
-#   dashboardBody(
-#     tabItems(
-#       tabItem(tabName = "chart",
-#         # Boxes need to be put in a row (or column)
-#         fluidRow(
-#           box(plotOutput("barChart"), width = 1000)
-#           )
-#       ),
-#       tabItem(tabName = "table",
-#         fluidRow(
-#           box(tableOutput("view"))
-#         )
-#       )
-#     )
-#   )
+#   sidebar = dashboardSidebar(
+#     selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
+#   ),
+#   controlbar = dashboardControlbar(),
+#   footer = dashboardFooter(),
+#   body = dashboardBody()
 # )
+
+
+ui <- dashboardPage(preloader = preloader,
+  dashboardHeader(title = "Airbnb Average Price in The Hague (NL)"),
+  dashboardSidebar(
+    selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
+    sidebarMenu(
+      menuItem("Chart", tabName = "chart", icon = icon("dashboard")),
+      menuItem("Table", tabName = "table", icon = icon("th"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "chart",
+        # Boxes need to be put in a row (or column)
+        fluidRow(
+          box(width = 12, plotOutput("barChart"))
+          )
+      ),
+      tabItem(tabName = "table",
+        fluidRow(
+          box(tableOutput("view"))
+        )
+      )
+    )
+  )
+)
 
 
 # # Define UI for app that draws a histogram ----
