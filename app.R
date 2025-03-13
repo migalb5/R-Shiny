@@ -21,7 +21,7 @@ ui <- bs4DashPage(preloader = preloader,
   bs4DashSidebar(width = '300px', minified = TRUE, expandOnHover = TRUE,
     sidebarMenu(
       menuItem("Chart", tabName = "chart", icon = icon("dashboard")),
-      menuItem("Table", tabName = "table", icon = icon("th")),
+      menuItem("Table", tabName = "table", icon = icon("th")), br(),
       selectInput("filter1", "Filter by Room Type:", choices = c("All", as.list(unique(dataset$room_type))) , selected = "All"),
       sliderInput("filter2", "Filter by range of Minimum Nights:",
                   min = min(dataset$minimum_nights),
@@ -34,10 +34,18 @@ ui <- bs4DashPage(preloader = preloader,
 #  dashboardFooter(left = "Created on 2025-03-12"
 #  ),
   bs4DashBody(
+    # tags$style(HTML("
+    #   .value-box .box-value {
+    #     font-size: 40px;  # Increase the font size of the value
+    #   }
+    #   .value-box .box-subtitle {
+    #     font-size: 20px;  # Increase the font size of the subtitle
+    #   }
+    # ")),
     fluidRow(
-      bs4ValueBox(subtitle = "Average price (EUR) of listings", bs4ValueBoxOutput("filtered_mean"), width = 6, icon = icon("thumbs-up"), color = "primary"),
-      bs4ValueBox(subtitle = "Highest price (EUR) of listings", bs4ValueBoxOutput("filtered_max"), width = 3, icon = icon("thumbs-down"), color = "secondary"),
-      bs4ValueBox(subtitle = "Lowest price (EUR) of listings", bs4ValueBoxOutput("filtered_min"), width = 3, icon = icon("thumbs-up"), color = "secondary")
+      bs4ValueBoxOutput("filtered_mean", width = 6),
+      bs4ValueBoxOutput("filtered_max", width = 3),
+      bs4ValueBoxOutput("filtered_min", width = 3)
     ),
     tabItems(
       tabItem(tabName = "chart",
@@ -67,11 +75,7 @@ server <- function(input, output) {
     req(input$filter2)
     dataset %>%
       filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
-<<<<<<< HEAD
       filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2]) %>%
-=======
-      filter(maximum_nights >= input$filter2[1], maximum_nights <= input$filter2[2]) %>%
->>>>>>> b7d57e1eb06bb8d927f529c406c2a1a9b0ed991e
       group_by(.data[[input$group_by]]) %>%
       summarise(Amount_Listings = n(),
                Avg_Price_EUR = mean(price), .groups = "drop") %>%
@@ -88,15 +92,30 @@ server <- function(input, output) {
   })
 
   output$filtered_mean <- renderbs4ValueBox({
-    mean(summary_data_pre()$price)
+    bs4ValueBox(
+      value = mean(summary_data_pre()$price),
+      subtitle = "Average price (EUR) of listings",
+      icon = icon("arrows-left-right-to-line"),
+      color = "primary"
+    )
   })
   output$filtered_max <- renderbs4ValueBox({
-    max(summary_data_pre()$price)
+    bs4ValueBox(
+      value = max(summary_data_pre()$price),
+      subtitle = "Highest price (EUR) of listings",
+      icon = icon("arrows-up-to-line"),
+      color = "secondary"
+    )
   })  
   output$filtered_min <- renderbs4ValueBox({
-    min(summary_data_pre()$price)
+    bs4ValueBox(
+      value = min(summary_data_pre()$price),
+      subtitle = "Lowest price (EUR) of listings",
+      icon = icon("arrows-down-to-line"),
+      color = "secondary"
+    )
   })
-  
+
   output$view <- renderTable({
     summary_data()
   })
