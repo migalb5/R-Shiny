@@ -22,22 +22,22 @@ ui <- bs4DashPage(preloader = preloader,
     sidebarMenu(
       menuItem("Chart", tabName = "chart", icon = icon("dashboard")),
       menuItem("Table", tabName = "table", icon = icon("th")),
-      selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood"),
       selectInput("filter1", "Filter by Room Type:", choices = c("All", as.list(unique(dataset$room_type))) , selected = "All"),
       sliderInput("filter2", "Filter by range of Minimum Nights:",
                   min = min(dataset$minimum_nights),
                   max = max(dataset$minimum_nights),
                   value = c(min(dataset$minimum_nights), min(dataset$minimum_nights) + 1),
-                  step = 1)
+                  step = 1),br(),
+      selectInput("group_by", "Select Group By Field:", choices = names(dataset), selected = "neighbourhood")
     )
   ),
 #  dashboardFooter(left = "Created on 2025-03-12"
 #  ),
   bs4DashBody(
     fluidRow(
-      valueBox(subtitle = "Average price (EUR) of listings", value = "", width = 2),
-      valueBox(subtitle = "Highest price (EUR) of listings", value = "30", width = 8),
-      valueBox(subtitle = "Lowest price (EUR) of listings", value = "30", width = 2),
+      bs4ValueBox(subtitle = "Average price (EUR) of listings", bs4ValueBoxOutput("filtered_mean"), width = 6, icon = icon("thumbs-up"), color = "primary"),
+      bs4ValueBox(subtitle = "Highest price (EUR) of listings", bs4ValueBoxOutput("filtered_max"), width = 3, icon = icon("thumbs-down"), color = "secondary"),
+      bs4ValueBox(subtitle = "Lowest price (EUR) of listings", bs4ValueBoxOutput("filtered_min"), width = 3, icon = icon("thumbs-up"), color = "secondary")
     ),
     tabItems(
       tabItem(tabName = "chart",
@@ -63,29 +63,36 @@ server <- function(input, output) {
   # Reactive summary table based on selected group
   summary_data <- reactive({
     req(input$group_by)  # Ensure input is available
+    req(input$filter1)
+    req(input$filter2)
     dataset %>%
+      filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
+      filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2]) %>%
       group_by(.data[[input$group_by]]) %>%
       summarise(Amount_Listings = n(),
                Avg_Price_EUR = mean(price), .groups = "drop") %>%
       arrange(desc(Avg_Price_EUR))
   })
 
-  summary_data2 <- reactive({
+  summary_data_pre <- reactive({
     req(input$group_by)  # Ensure input is available
     req(input$filter1)
     req(input$filter2)
     dataset %>%
-      filter(input$group_by == .data[[input$group_by]]) %>%
       filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
-      filter(maximum_nights >= input$filter2[1], maximum_nights <= input$filter2[2])
+      filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2])
   })
 
-  # average_price = mean(d$price)
-  # highest_price = max(summary_data$price)
-  # lowest_price = min(summary_data$price)
-  # 
-  # output$view <- renderbs4ValueBox(average_price)
-    
+  output$filtered_mean <- renderbs4ValueBox({
+    mean(summary_data_pre()$price)
+  })
+  output$filtered_max <- renderbs4ValueBox({
+    max(summary_data_pre()$price)
+  })  
+  output$filtered_min <- renderbs4ValueBox({
+    min(summary_data_pre()$price)
+  })
+  
   output$view <- renderTable({
     summary_data()
   })
