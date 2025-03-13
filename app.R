@@ -67,7 +67,11 @@ server <- function(input, output) {
     req(input$filter2)
     dataset %>%
       filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
+<<<<<<< HEAD
       filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2]) %>%
+=======
+      filter(maximum_nights >= input$filter2[1], maximum_nights <= input$filter2[2]) %>%
+>>>>>>> b7d57e1eb06bb8d927f529c406c2a1a9b0ed991e
       group_by(.data[[input$group_by]]) %>%
       summarise(Amount_Listings = n(),
                Avg_Price_EUR = mean(price), .groups = "drop") %>%
