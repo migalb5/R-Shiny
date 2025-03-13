@@ -5,6 +5,7 @@ library(dplyr)
 library(ggplot2)
 library(bs4Dash)
 library(waiter)
+library(shinyWidgets)
 
 # Define the local file path (update this with the path to your file)
 local_file_path <- "data/listings.csv"  # Change this to your local file path
@@ -22,7 +23,17 @@ ui <- bs4DashPage(preloader = preloader,
     sidebarMenu(
       menuItem("Chart", tabName = "chart", icon = icon("dashboard")),
       menuItem("Table", tabName = "table", icon = icon("th")), br(),
-      selectInput("filter1", "Filter by Room Type:", choices = c("All", as.list(unique(dataset$room_type))) , selected = "All"),
+      pickerInput(
+        inputId = "filter1", 
+        label = "Filter by Room Type:", 
+        choices = unique(dataset$room_type), 
+        options = pickerOptions(
+          actionsBox = TRUE, 
+          selectedTextFormat = "count > 2"
+        ), 
+        multiple = TRUE,
+        selected = unique(dataset$room_type)
+      ),
       sliderInput("filter2", "Filter by range of Minimum Nights:",
                   min = min(dataset$minimum_nights),
                   max = max(dataset$minimum_nights),
@@ -74,8 +85,8 @@ server <- function(input, output) {
     req(input$filter1)
     req(input$filter2)
     dataset %>%
-      filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
-      filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2]) %>%
+      filter(room_type %in% input$filter1) %>%
+      filter(minimum_nights >= input$filter2[1] & minimum_nights <= input$filter2[2]) %>%
       group_by(.data[[input$group_by]]) %>%
       summarise(Amount_Listings = n(),
                Avg_Price_EUR = mean(price), .groups = "drop") %>%
@@ -87,8 +98,8 @@ server <- function(input, output) {
     req(input$filter1)
     req(input$filter2)
     dataset %>%
-      filter(ifelse(input$filter1 == "All", TRUE, room_type == input$filter1)) %>%
-      filter(minimum_nights >= input$filter2[1], minimum_nights <= input$filter2[2])
+      filter(room_type %in% input$filter1) %>%
+      filter(minimum_nights >= input$filter2[1] & minimum_nights <= input$filter2[2])
   })
 
   output$filtered_mean <- renderbs4ValueBox({
@@ -119,7 +130,7 @@ server <- function(input, output) {
   output$view <- renderTable({
     summary_data()
   })
-  
+  dataset
   output$barChart <- renderPlot({
     ggplot(summary_data(), aes(x = .data[[input$group_by]], y = Avg_Price_EUR)) +
       geom_bar(stat = "identity", fill = "skyblue") +  # Create bar chart
